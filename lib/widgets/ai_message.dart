@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:flutter_syntax_view/flutter_syntax_view.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:markdown/markdown.dart' as md;
 
 class AiMessage extends StatelessWidget {
   final String message;
@@ -46,36 +44,11 @@ class AiMessage extends StatelessWidget {
                 color: Colors.black,
               ),
             ),
-            builders: {
-              'code': CodeElementBuilder(),
-            },
+            // builders: {
+            //   'code': CodeElementBuilder(),
+            // },
           ),
         ),
-      ),
-    );
-  }
-}
-
-class CodeElementBuilder extends MarkdownElementBuilder {
-  @override
-  Widget? visitElementAfter(md.Element element, TextStyle? preferredStyle) {
-    var language = '';
-    if (element.attributes['class'] != null) {
-      String lg = element.attributes['class'] as String;
-      language = lg.substring(9);
-    }
-    return SizedBox(
-      width: double.infinity,
-      child: SyntaxView(
-        code: element.textContent,
-        syntax: Syntax.values.firstWhere(
-          (e) => e.name.toLowerCase() == language.toLowerCase(),
-          orElse: () => Syntax.DART,
-        ),
-        syntaxTheme: SyntaxTheme.vscodeLight(),
-        withLinesCount: true,
-        withZoom: true,
-        expanded: true,
       ),
     );
   }

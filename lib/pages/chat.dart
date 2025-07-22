@@ -65,85 +65,10 @@ PopupMenuItem<String> _buildPopupMenuItem({
   );
 }
 
-// void _showLLMModelsDialog(BuildContext context) {
-//     showDialog(
-//       context: context,
-//       builder: (BuildContext context) {
-//         return SimpleDialog(
-//           backgroundColor: const Color(0xFFFCFCFC),
-//           // title: Text(
-//           //   'Select LLM Model',
-//           //   style: GoogleFonts.ubuntu(
-//           //     fontWeight: FontWeight.bold, // Increased font weight
-//           //   ),
-//           // ),
-//           children: <Widget>[
-//             SimpleDialogOption(
-//               onPressed: () {
-//                 // Handle selection of Gemini
-//                 Navigator.pop(context);
-//               },
-//               child: const Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   Text(
-//                     'Gemini 2.5',
-//                     style: TextStyle(fontWeight: FontWeight.w500,
-//                     fontSize: 24),
-//                   ),
-//                   Text(
-//                     'Smart',
-//                     style: TextStyle(fontSize: 15),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//             SimpleDialogOption(
-//               onPressed: () {
-//                 // Handle selection of Llama
-//                 Navigator.pop(context);
-//               },
-//               child: const Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   Text(
-//                     'Llama 4',
-//                     style: TextStyle(fontWeight: FontWeight.w500,fontSize: 24),
-//                   ),
-//                   Text(
-//                     'Fast',
-//                     style: TextStyle(fontSize: 15),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//             SimpleDialogOption(
-//               onPressed: () {
-//                 // Handle selection of GPT-4
-//                 Navigator.pop(context);
-//               },
-//               child: const Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   Text(
-//                     'GPT 4.1',
-//                     style: TextStyle(fontWeight: FontWeight.w500,fontSize: 24),
-//                   ),
-//                   Text(
-//                     'Coding',
-//                     style: TextStyle(fontSize: 15),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ],
-//         );
-//       },
-//     );
-//   }
-
 class _ChatState extends State<Chat> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final TextEditingController _textController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
 
   bool isPressedThink = false;
   bool isPressedDeepSearch = false;
@@ -153,7 +78,7 @@ class _ChatState extends State<Chat> {
     {
       "role": "user",
       "message":
-          "An AI agent is a system or program designed to autonomously perform tasks on behalf of a user or another system. It perceives its environment, reasons, plans, and then acts to achieve specific goals. AI agents can learn and improve their performance over time through machine learning or by acquiring knowledge."
+          "An AI agent is a system or program designed to autonomously perform tasks on behalf of a user or another system. It perceives its environment, reasons, plans, and then acts to achieve specific goals. AI agents can learn and improve their performance over time through machine learning or by acquiring knowledge.",
     },
     {
       "role": "ai",
@@ -170,12 +95,12 @@ Here's a breakdown of the key aspects of AI agents:
 * **Learning:** AI agents can learn from their experiences and improve over time. They adapt to new situations, refine their decision-making processes, and respond more effectively.
 * **Collaboration:** AI agents can work with other agents to coordinate and perform more complex workflows.
 * **Task Automation:** AI agents can automate complex tasks that would otherwise require human resources, leading to increased efficiency and productivity.
-'''
+''',
     },
     {
       "role": "user",
       "message":
-          "An AI agent is a system or program designed to autonomously perform tasks on behalf of a user or another system. It perceives its environment, reasons, plans, and then acts to achieve specific goals. AI agents can learn and improve their performance over time through machine learning or by acquiring knowledge."
+          "An AI agent is a system or program designed to autonomously perform tasks on behalf of a user or another system. It perceives its environment, reasons, plans, and then acts to achieve specific goals. AI agents can learn and improve their performance over time through machine learning or by acquiring knowledge.",
     },
     {
       "role": "ai",
@@ -249,23 +174,17 @@ GROUP BY c.id, c.email -- Grouping by c.id is sufficient as it's the PK
 ORDER BY total_lifetime_spending DESC
 LIMIT 5;
 ```
- '''
-    }
+ ''',
+    },
   ];
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToBottom();
-    });
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   _scrollToBottom();
+    // });
   }
 
   void _scrollToBottom() {
@@ -276,6 +195,14 @@ LIMIT 5;
         curve: Curves.easeOut,
       );
     }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _textController.dispose();
+    _focusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -391,8 +318,10 @@ LIMIT 5;
                   child: SingleChildScrollView(
                     reverse: true, // ensures keyboard doesn’t cover content
                     child: TextField(
+                      controller: _textController,
+                      focusNode: _focusNode,
+                      autofocus: false,
                       cursorColor: const Color.fromARGB(255, 46, 46, 46),
-                      autofocus: true,
                       maxLines: 6,
                       minLines: 1,
                       decoration: const InputDecoration(
