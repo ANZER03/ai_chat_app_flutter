@@ -137,11 +137,11 @@ class _LoginPageState extends State<LoginPage> {
                       labelText: 'Username, email or mobile number',
                       floatingLabelBehavior: FloatingLabelBehavior.never,
                       hintText: 'Username, email or mobile number',
-                      hintStyle: GoogleFonts.ubuntu(
-                        fontSize: 16,
-                        color: const Color(0xFFAAAAAA),
-                        fontWeight: FontWeight.w300,
-                      ),
+                      // hintStyle: GoogleFonts.ubuntu(
+                      //   fontSize: 16,
+                      //   color: const Color(0xFFAAAAAA),
+                      //   fontWeight: FontWeight.w300,
+                      // ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 18,
@@ -194,11 +194,11 @@ class _LoginPageState extends State<LoginPage> {
                       labelText: 'Password',
                       floatingLabelBehavior: FloatingLabelBehavior.never,
                       hintText: 'Password',
-                      hintStyle: GoogleFonts.ubuntu(
-                        fontSize: 16,
-                        color: const Color(0xFFAAAAAA),
-                        fontWeight: FontWeight.w300,
-                      ),
+                      // hintStyle: GoogleFonts.ubuntu(
+                      //   fontSize: 16,
+                      //   color: const Color(0xFFAAAAAA),
+                      //   fontWeight: FontWeight.w300,
+                      // ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 18,
@@ -249,7 +249,7 @@ class _LoginPageState extends State<LoginPage> {
                       padding: const EdgeInsets.symmetric(vertical: 16.0),
                       minimumSize: const Size(double.infinity, 56),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16.0),
+                        borderRadius: BorderRadius.circular(30.0),
                       ),
                     ),
                     child: Text(
