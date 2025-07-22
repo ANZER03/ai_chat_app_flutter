@@ -182,9 +182,10 @@ LIMIT 5;
   @override
   void initState() {
     super.initState();
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   _scrollToBottom();
-    // });
+    // _focusNode.addListener removed: no longer managing readOnly state
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToBottom();
+    });
   }
 
   void _scrollToBottom() {
@@ -209,6 +210,7 @@ LIMIT 5;
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       backgroundColor: const Color(0xFFF8F6F5),
       drawer: DrawerWidget(),
       appBar: AppBar(
@@ -217,6 +219,7 @@ LIMIT 5;
         leading: IconButton(
           icon: const Icon(Icons.sort),
           onPressed: () {
+            FocusScope.of(context).unfocus(); // Ensure keyboard hides
             _scaffoldKey.currentState?.openDrawer();
           },
         ),
@@ -239,7 +242,7 @@ LIMIT 5;
                   color: Colors.black,
                 ),
               ),
-              const Icon(Icons.keyboard_arrow_down, color: Colors.black),
+              const Icon(Icons.keyboard_arrow_down, color: Color.fromARGB(255, 99, 95, 95)),
             ],
           ),
           itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -304,7 +307,7 @@ LIMIT 5;
               border: Border.all(color: const Color(0xFFE4E4E2), width: 1.2),
               borderRadius: BorderRadius.circular(30),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             margin: const EdgeInsets.fromLTRB(10, 1, 10, 5),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -320,7 +323,12 @@ LIMIT 5;
                     child: TextField(
                       controller: _textController,
                       focusNode: _focusNode,
+                      // readOnly is always false by default (line removed)
+                      // onTap logic is unnecessary (line removed)
                       autofocus: false,
+                      onChanged: (text) {
+                        setState(() {});
+                      },
                       cursorColor: const Color.fromARGB(255, 46, 46, 46),
                       maxLines: 6,
                       minLines: 1,
@@ -339,12 +347,115 @@ LIMIT 5;
                   children: [
                     Row(
                       children: [
-                        IconButton(
-                          style: IconButton.styleFrom(
-                            backgroundColor: const Color(0xFFEFEFED),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Color(0xFFEFEFED),
+                            borderRadius: BorderRadius.circular(40),
                           ),
-                          icon: const Icon(Icons.attach_file, size: 24),
-                          onPressed: () {},
+                          child: PopupMenuButton<String>(
+                            tooltip: 'Attach',
+                            icon: const Icon(Icons.attach_file, size: 24, color: Color(0xFF141313)),
+                            color: Colors.white,
+                            offset: const Offset(0, -230), // Larger negative y for more margin below menu
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30.0), // Strongly rounded menu corners
+                            ),
+                            onSelected: (String value) {
+                              print('Selected: $value');
+                            },
+                            itemBuilder: (BuildContext context) => [
+                              PopupMenuItem(
+                                value: 'camera',
+                                child: Padding(
+                                  padding: const EdgeInsets.only(bottom: 23.0),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: Color.fromARGB(255, 255, 255, 255),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Color(0xFFE4E4E2),
+                                            width: 1.2,
+                                          ),
+                                        ),
+                                        child: CircleAvatar(
+                                          backgroundColor: Colors.transparent,
+                                          radius: 18,
+                                          child: Icon(
+                                            Icons.camera_alt_outlined,
+                                            color: Colors.black87,
+                                            size: 18,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 13),
+                                      Text('Camera', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: 'photos',
+                                child: Padding(
+                                  padding: const EdgeInsets.only(bottom: 23.0),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: Color.fromARGB(255, 255, 255, 255),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Color(0xFFE4E4E2),
+                                            width: 1.2,
+                                          ),
+                                        ),
+                                        child: CircleAvatar(
+                                          backgroundColor: Color.fromARGB(255, 255, 255, 255),
+                                          radius: 18,
+                                          child: Icon(
+                                            Icons.photo_outlined,
+                                            color: Colors.black87,
+                                            size: 18,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 13),
+                                      Text('Photos', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: 'files',
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Color.fromARGB(255, 255, 255, 255),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Color(0xFFE4E4E2),
+                                          width: 1.2,
+                                        ),
+                                      ),
+                                      child: CircleAvatar(
+                                        backgroundColor: Color.fromARGB(255, 255, 255, 255),
+                                        radius: 18,
+                                        child: Icon(
+                                          Icons.insert_drive_file_outlined,
+                                          color: Colors.black87,
+                                          size: 18,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 13),
+                                    Text('Files', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(width: 10),
                         TextButton.icon(
@@ -434,7 +545,23 @@ LIMIT 5;
                         ),
                       ],
                     ),
-                    IconButton(icon: const Icon(Icons.mic), onPressed: () {}),
+                    IconButton(
+                        style: IconButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+                          fixedSize: _textController.text.isEmpty
+                              ? const Size(35, 35)
+                              : const Size(40, 40),
+                        ),
+                        icon: Icon(
+                          _textController.text.isEmpty
+                              ? Icons.graphic_eq
+                              : Icons.send,
+                          size: _textController.text.isEmpty
+                              ? 22
+                              : 25,
+                          color: const Color.fromARGB(255, 255, 255, 255),
+                        ),
+                        onPressed: () {}),
                   ],
                 ),
               ],
