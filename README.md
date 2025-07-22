@@ -1,4 +1,4 @@
-# ai_chat_app
+# ANZER AI
 
 A new Flutter project.
 
