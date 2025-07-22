@@ -183,9 +183,9 @@ LIMIT 5;
   void initState() {
     super.initState();
     // _focusNode.addListener removed: no longer managing readOnly state
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToBottom();
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   _scrollToBottom();
+    // });
   }
 
   void _scrollToBottom() {
