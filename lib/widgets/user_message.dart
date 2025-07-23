@@ -23,7 +23,7 @@ class UserMessage extends StatelessWidget {
         child: Text(
           message,
           style: GoogleFonts.inter(
-            fontSize: 17,
+            fontSize: 15,
             color: const Color.fromARGB(234, 0, 0, 0),
             fontWeight: FontWeight.w500,
           ),
