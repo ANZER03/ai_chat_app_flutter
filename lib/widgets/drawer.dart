@@ -51,11 +51,122 @@ class _DrawerWidgetState extends State<DrawerWidget> {
     });
   }
 
+  void _showMessageOptions(BuildContext context, int index) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFFF8F6F5),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.only(top: 8, bottom: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Top divider/handle
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(255, 90, 90, 90),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.push_pin_outlined,
+                  color: Color.fromARGB(255, 29, 29, 29),
+                  weight: 22,
+                ),
+                title: Text(
+                  'Pin',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  // Handle pin action
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Pinned: ${filteredConversations[index]['title']}',
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: const Icon(
+                  Icons.edit_outlined,
+                  color: Color.fromARGB(255, 29, 29, 29),
+                  weight: 22,
+                ),
+                title: Text(
+                  'Rename',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  // Handle rename action
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Rename: ${filteredConversations[index]['title']}',
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: const Icon(
+                  Icons.delete_outline,
+                  weight: 22,
+                  color: Colors.red,
+                ),
+                title: Text(
+                  'Delete',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.red,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  // Handle delete action
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Deleted: ${filteredConversations[index]['title']}',
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
       backgroundColor: Color(0xFFF8F6F5),
-      width: 400.0,
+      width: MediaQuery.of(context).size.width * 0.8,
       child: SafeArea(
         child: Column(
           children: [
@@ -147,10 +258,8 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                 itemBuilder: (context, index) {
                   return ListTile(
                     trailing: IconButton(
-                      onPressed: ()=>{
-                        
-                      },
-                      icon:  Icon(
+                      onPressed: () => _showMessageOptions(context, index),
+                      icon: Icon(
                         Icons.more_vert,
                         size: 20,
                         color: Color.fromARGB(204, 196, 196, 196),
@@ -208,8 +317,6 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    width: 150,
-
                     child: Row(
                       children: [
                         CircleAvatar(
@@ -223,7 +330,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                           'Anouar Zerrik',
                           style: GoogleFonts.inter(
                             fontSize: 15,
-                            fontWeight: FontWeight.w400,
+                            fontWeight: FontWeight.w500,
                             color: const Color.fromARGB(255, 0, 0, 0),
                           ),
                         ),
