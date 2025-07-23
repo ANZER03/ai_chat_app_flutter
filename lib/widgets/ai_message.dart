@@ -50,7 +50,7 @@ class AiMessage extends StatelessWidget {
               }
 
               String url = href;
-              // Add scheme if missing (e.g., convert "www.google.com" to "https://www.google.com")
+              // Add scheme if missing (e.g., convert "www.google.com" to "https://www.google.com  ")
               if (!url.startsWith('http://') && !url.startsWith('https://')) {
                 url = 'https://$url';
               }
@@ -134,7 +134,9 @@ class AiMessage extends StatelessWidget {
               ),
               // Ordered list
               orderedListAlign: WrapAlignment.start,
-              // Table
+              // Table configurations for scrollable behavior
+              tableColumnWidth:
+                  const IntrinsicColumnWidth(), // This enables horizontal scrolling
               tableHead: GoogleFonts.inter(
                 fontSize: 16,
                 color: const Color.fromARGB(221, 0, 0, 0),
@@ -150,6 +152,9 @@ class AiMessage extends StatelessWidget {
                 color: const Color.fromARGB(221, 150, 150, 150),
                 width: 1,
               ),
+              tablePadding: const EdgeInsets.all(
+                8,
+              ), // Add some padding to table cells
               // Horizontal rule
               horizontalRuleDecoration: BoxDecoration(
                 border: Border(
