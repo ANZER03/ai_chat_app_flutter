@@ -32,12 +32,14 @@ class AiMessage extends StatelessWidget {
             data: message,
             styleSheet: MarkdownStyleSheet(
               p: GoogleFonts.inter(
-                fontSize: 14,
+                fontSize: 17,
                 color: const Color.fromARGB(221, 0, 0, 0),
+                fontWeight: FontWeight.w500,
               ),
               listBullet: GoogleFonts.inter(
-                fontSize: 14,
+                fontSize: 17,
                 color: const Color.fromARGB(221, 0, 0, 0),
+                fontWeight: FontWeight.w500,
               ),
               code: GoogleFonts.sourceCodePro(
                 backgroundColor: Colors.grey[200],

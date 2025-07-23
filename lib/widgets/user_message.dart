@@ -14,10 +14,7 @@ class UserMessage extends StatelessWidget {
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.7,
         ),
-        margin: const EdgeInsets.symmetric(
-          vertical: 5,
-          horizontal: 10,
-        ),
+        margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: const Color.fromARGB(255, 255, 255, 255),
@@ -26,8 +23,9 @@ class UserMessage extends StatelessWidget {
         child: Text(
           message,
           style: GoogleFonts.inter(
-            fontSize: 14,
+            fontSize: 17,
             color: const Color.fromARGB(234, 0, 0, 0),
+            fontWeight: FontWeight.w500,
           ),
         ),
       ),

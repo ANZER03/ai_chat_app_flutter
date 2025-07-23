@@ -81,12 +81,13 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                 leading: const Icon(
                   Icons.push_pin_outlined,
                   color: Color.fromARGB(255, 29, 29, 29),
-                  weight: 22,
+                  weight: 26,
+                  size: 24,
                 ),
                 title: Text(
                   'Pin',
                   style: GoogleFonts.inter(
-                    fontSize: 16,
+                    fontSize: 17,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -107,12 +108,13 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                 leading: const Icon(
                   Icons.edit_outlined,
                   color: Color.fromARGB(255, 29, 29, 29),
-                  weight: 22,
+                  weight: 26,
+                  size: 24,
                 ),
                 title: Text(
                   'Rename',
                   style: GoogleFonts.inter(
-                    fontSize: 16,
+                    fontSize: 17,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -132,13 +134,14 @@ class _DrawerWidgetState extends State<DrawerWidget> {
               ListTile(
                 leading: const Icon(
                   Icons.delete_outline,
-                  weight: 22,
+                  weight: 26,
                   color: Colors.red,
+                  size: 24,
                 ),
                 title: Text(
                   'Delete',
                   style: GoogleFonts.inter(
-                    fontSize: 16,
+                    fontSize: 17,
                     fontWeight: FontWeight.w500,
                     color: Colors.red,
                   ),
