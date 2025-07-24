@@ -214,6 +214,28 @@ class _ChatState extends State<Chat> {
     });
   }
 
+  void _startNewConversation() {
+    setState(() {
+      _messages.clear();
+      _selectedImages.clear();
+      _textController.clear();
+      isPressedThink = false;
+      isPressedDeepSearch = false;
+      isAIResponding = false;
+    });
+
+    // Unfocus any active text field
+    FocusScope.of(context).unfocus();
+
+    // // Optional: Show a brief confirmation
+    // ScaffoldMessenger.of(context).showSnackBar(
+    //   const SnackBar(
+    //     content: Text('New conversation started'),
+    //     duration: Duration(seconds: 1),
+    //   ),
+    // );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -285,214 +307,292 @@ class _ChatState extends State<Chat> {
         actions: [
           IconButton(
             icon: const Icon(Icons.maps_ugc_outlined),
-            onPressed: () {
-              // Handle new page creation
-            },
+            onPressed: _startNewConversation,
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Scrollbar(
-              controller: _scrollController,
-              child: ListView.builder(
-                controller: _scrollController,
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  final message = _messages[index];
-                  if (message['role'] == 'user') {
-                    return UserMessage(
-                      message: message['message']!,
-                      images: message['images'] as List<File>?,
-                    );
-                  } else {
-                    return AiMessage(message: message['message']!);
-                  }
-                },
+      body: GestureDetector(
+        onTap: () {
+          // Unfocus text field when tapping outside
+          FocusScope.of(context).unfocus();
+        },
+        child: Column(
+          children: [
+            Expanded(
+              child: _messages.isEmpty
+                  ? Center(
+                      child: Opacity(
+                        opacity: 0.2, // Control opacity here (0.0 to 1.0)
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(
+                            Colors.grey.withOpacity(
+                              0.5,
+                            ), // Control color and additional opacity
+                            BlendMode.modulate,
+                          ),
+                          child: Image.asset(
+                            'assets/images/logo-anzer.png',
+                            width: 230, // Control size
+                            height: 230,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                    )
+                  : Scrollbar(
+                      controller: _scrollController,
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        itemCount: _messages.length,
+                        itemBuilder: (context, index) {
+                          final message = _messages[index];
+                          if (message['role'] == 'user') {
+                            return UserMessage(
+                              message: message['message']!,
+                              images: message['images'] as List<File>?,
+                            );
+                          } else {
+                            return AiMessage(message: message['message']!);
+                          }
+                        },
+                      ),
+                    ),
+            ),
+            // Fixed Bottom Container
+            Container(
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 255, 255, 255),
+                border: Border.all(color: const Color(0xFFE4E4E2), width: 1.2),
+                borderRadius: BorderRadius.circular(30),
               ),
-            ),
-          ),
-          // Fixed Bottom Container
-          Container(
-            decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 255, 255, 255),
-              border: Border.all(color: const Color(0xFFE4E4E2), width: 1.2),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 7),
-            margin: const EdgeInsets.fromLTRB(4, 1, 4, 3),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Image preview list
-                if (_selectedImages.isNotEmpty)
-                  Container(
-                    height: 120,
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _selectedImages.length,
-                      itemBuilder: (context, index) {
-                        return Container(
-                          margin: const EdgeInsets.only(right: 8),
-                          child: Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(25),
-                                child: Image.file(
-                                  _selectedImages[index],
-                                  width: 120,
-                                  height: 120,
-                                  fit: BoxFit.cover,
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 7),
+              margin: const EdgeInsets.fromLTRB(4, 1, 4, 3),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Image preview list
+                  if (_selectedImages.isNotEmpty)
+                    Container(
+                      height: 120,
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _selectedImages.length,
+                        itemBuilder: (context, index) {
+                          return Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            child: Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(25),
+                                  child: Image.file(
+                                    _selectedImages[index],
+                                    width: 120,
+                                    height: 120,
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
-                              ),
-                              Positioned(
-                                top: 8,
-                                right: 8,
-                                child: GestureDetector(
-                                  onTap: () => _removeImage(index),
-                                  child: Container(
-                                    width: 24,
-                                    height: 24,
-                                    decoration: BoxDecoration(
-                                      color: const Color.fromARGB(
-                                        255,
-                                        224,
-                                        224,
-                                        224,
-                                      ).withOpacity(0.9),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.close,
-                                      color: Colors.black,
-                                      size: 16,
+                                Positioned(
+                                  top: 8,
+                                  right: 8,
+                                  child: GestureDetector(
+                                    onTap: () => _removeImage(index),
+                                    child: Container(
+                                      width: 24,
+                                      height: 24,
+                                      decoration: BoxDecoration(
+                                        color: const Color.fromARGB(
+                                          255,
+                                          224,
+                                          224,
+                                          224,
+                                        ).withOpacity(0.9),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.close,
+                                        color: Colors.black,
+                                        size: 16,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: SingleChildScrollView(
-                    reverse: true, // ensures keyboard doesn’t cover content
-                    child: TextField(
-                      controller: _textController,
-                      focusNode: _focusNode,
-                      // readOnly is always false by default (line removed)
-                      // onTap logic is unnecessary (line removed)
-                      autofocus: false,
-                      onChanged: (text) {
-                        setState(() {});
-                      },
-                      onSubmitted: (text) {
-                        if (text.trim().isNotEmpty) {
-                          _sendMessage();
-                        }
-                      },
-                      textInputAction: TextInputAction.send,
-                      cursorColor: const Color.fromARGB(255, 46, 46, 46),
-                      maxLines: 6,
-                      minLines: 1,
-                      decoration: const InputDecoration(
-                        floatingLabelBehavior: FloatingLabelBehavior.never,
-                        hintText: 'Ask Anzer',
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: SingleChildScrollView(
+                      reverse: true, // ensures keyboard doesn’t cover content
+                      child: GestureDetector(
+                        onTap: () {
+                          // Request focus when text field is tapped
+                          _focusNode.requestFocus();
+                        },
+                        child: TextField(
+                          controller: _textController,
+                          focusNode: _focusNode,
+                          autofocus: false,
+                          onChanged: (text) {
+                            setState(() {});
+                          },
+                          onSubmitted: (text) {
+                            if (text.trim().isNotEmpty) {
+                              _sendMessage();
+                            }
+                          },
+                          textInputAction: TextInputAction.send,
+                          cursorColor: const Color.fromARGB(255, 46, 46, 46),
+                          maxLines: 6,
+                          minLines: 1,
+                          decoration: const InputDecoration(
+                            floatingLabelBehavior: FloatingLabelBehavior.never,
+                            hintText: 'Ask Anzer',
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(vertical: 4),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Color(0xFFEFEFED),
-                            borderRadius: BorderRadius.circular(40),
-                          ),
-                          child: PopupMenuButton<String>(
-                            tooltip: 'Attach',
-                            icon: const Icon(
-                              Icons.attach_file,
-                              size: 24,
-                              color: Color(0xFF141313),
+                  const SizedBox(height: 2),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Color(0xFFEFEFED),
+                              borderRadius: BorderRadius.circular(40),
                             ),
-                            color: Colors.white,
-                            offset: const Offset(
-                              0,
-                              -230,
-                            ), // Larger negative y for more margin below menu
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                30.0,
-                              ), // Strongly rounded menu corners
-                            ),
-                            onSelected: (String value) {
-                              print('Selected: $value');
-                            },
-                            itemBuilder: (BuildContext context) => [
-                              PopupMenuItem(
-                                value: 'camera',
-                                onTap: () => {_pickImage(ImageSource.camera)},
-                                child: Padding(
-                                  padding: const EdgeInsets.only(bottom: 23.0),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          color: Color.fromARGB(
-                                            255,
-                                            255,
-                                            255,
-                                            255,
+                            child: PopupMenuButton<String>(
+                              tooltip: 'Attach',
+                              icon: const Icon(
+                                Icons.attach_file,
+                                size: 24,
+                                color: Color(0xFF141313),
+                              ),
+                              color: Colors.white,
+                              offset: const Offset(
+                                0,
+                                -230,
+                              ), // Larger negative y for more margin below menu
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  30.0,
+                                ), // Strongly rounded menu corners
+                              ),
+                              onSelected: (String value) {
+                                print('Selected: $value');
+                              },
+                              itemBuilder: (BuildContext context) => [
+                                PopupMenuItem(
+                                  value: 'camera',
+                                  onTap: () => {_pickImage(ImageSource.camera)},
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                      bottom: 23.0,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            color: Color.fromARGB(
+                                              255,
+                                              255,
+                                              255,
+                                              255,
+                                            ),
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: Color(0xFFE4E4E2),
+                                              width: 1.2,
+                                            ),
                                           ),
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: Color(0xFFE4E4E2),
-                                            width: 1.2,
+                                          child: CircleAvatar(
+                                            backgroundColor: Colors.transparent,
+                                            radius: 18,
+                                            child: Icon(
+                                              Icons.camera_alt_outlined,
+                                              color: Colors.black87,
+                                              size: 18,
+                                            ),
                                           ),
                                         ),
-                                        child: CircleAvatar(
-                                          backgroundColor: Colors.transparent,
-                                          radius: 18,
-                                          child: Icon(
-                                            Icons.camera_alt_outlined,
-                                            color: Colors.black87,
-                                            size: 18,
+                                        SizedBox(width: 13),
+                                        Text(
+                                          'Camera',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 15,
                                           ),
                                         ),
-                                      ),
-                                      SizedBox(width: 13),
-                                      Text(
-                                        'Camera',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 15,
-                                        ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                              PopupMenuItem(
-                                value: 'photos',
-                                onTap: () => {_pickImage(ImageSource.gallery)},
-                                child: Padding(
-                                  padding: const EdgeInsets.only(bottom: 23.0),
+                                PopupMenuItem(
+                                  value: 'photos',
+                                  onTap: () => {
+                                    _pickImage(ImageSource.gallery),
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                      bottom: 23.0,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            color: Color.fromARGB(
+                                              255,
+                                              255,
+                                              255,
+                                              255,
+                                            ),
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: Color(0xFFE4E4E2),
+                                              width: 1.2,
+                                            ),
+                                          ),
+                                          child: CircleAvatar(
+                                            backgroundColor: Color.fromARGB(
+                                              255,
+                                              255,
+                                              255,
+                                              255,
+                                            ),
+                                            radius: 18,
+                                            child: Icon(
+                                              Icons.photo_outlined,
+                                              color: Colors.black87,
+                                              size: 18,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(width: 13),
+                                        Text(
+                                          'Photos',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'files',
                                   child: Row(
                                     children: [
                                       Container(
@@ -518,7 +618,7 @@ class _ChatState extends State<Chat> {
                                           ),
                                           radius: 18,
                                           child: Icon(
-                                            Icons.photo_outlined,
+                                            Icons.insert_drive_file_outlined,
                                             color: Colors.black87,
                                             size: 18,
                                           ),
@@ -526,7 +626,7 @@ class _ChatState extends State<Chat> {
                                       ),
                                       SizedBox(width: 13),
                                       Text(
-                                        'Photos',
+                                        'Files',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w500,
                                           fontSize: 15,
@@ -535,169 +635,127 @@ class _ChatState extends State<Chat> {
                                     ],
                                   ),
                                 ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          TextButton.icon(
+                            style: TextButton.styleFrom(
+                              side: BorderSide(
+                                color: isPressedDeepSearch
+                                    ? Colors.transparent
+                                    : const Color(0xFFE4E4E2),
+                                width: 0,
                               ),
-                              PopupMenuItem(
-                                value: 'files',
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        color: Color.fromARGB(
-                                          255,
-                                          255,
-                                          255,
-                                          255,
-                                        ),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: Color(0xFFE4E4E2),
-                                          width: 1.2,
-                                        ),
-                                      ),
-                                      child: CircleAvatar(
-                                        backgroundColor: Color.fromARGB(
-                                          255,
-                                          255,
-                                          255,
-                                          255,
-                                        ),
-                                        radius: 18,
-                                        child: Icon(
-                                          Icons.insert_drive_file_outlined,
-                                          color: Colors.black87,
-                                          size: 18,
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(width: 13),
-                                    Text(
-                                      'Files',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                              backgroundColor: isPressedDeepSearch
+                                  ? const Color(0xFF141313)
+                                  : const Color(0xFFEFEFED),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 13,
+                                vertical: 10,
                               ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        TextButton.icon(
-                          style: TextButton.styleFrom(
-                            side: BorderSide(
-                              color: isPressedDeepSearch
-                                  ? Colors.transparent
-                                  : const Color(0xFFE4E4E2),
-                              width: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(40),
+                              ),
                             ),
-                            backgroundColor: isPressedDeepSearch
-                                ? const Color(0xFF141313)
-                                : const Color(0xFFEFEFED),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 13,
-                              vertical: 10,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(40),
-                            ),
-                          ),
-                          icon: Icon(
-                            Icons.public,
-                            color: isPressedDeepSearch
-                                ? Colors.white
-                                : const Color(0xFF141313),
-                            size: 20,
-                          ),
-                          label: Text(
-                            'DeepSearch',
-                            style: GoogleFonts.ubuntu(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
+                            icon: Icon(
+                              Icons.public,
                               color: isPressedDeepSearch
                                   ? Colors.white
                                   : const Color(0xFF141313),
+                              size: 20,
                             ),
+                            label: Text(
+                              'DeepSearch',
+                              style: GoogleFonts.ubuntu(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: isPressedDeepSearch
+                                    ? Colors.white
+                                    : const Color(0xFF141313),
+                              ),
+                            ),
+                            onPressed: () {
+                              FocusScope.of(context).unfocus();
+                              setState(() {
+                                isPressedDeepSearch = !isPressedDeepSearch;
+                              });
+                            },
                           ),
-                          onPressed: () {
-                            setState(() {
-                              isPressedDeepSearch = !isPressedDeepSearch;
-                            });
-                          },
-                        ),
-                        const SizedBox(width: 10),
-                        TextButton.icon(
-                          style: TextButton.styleFrom(
-                            side: BorderSide(
-                              color: isPressedThink
-                                  ? Colors.transparent
-                                  : const Color(0xFFE4E4E2),
-                              width: 0,
+                          const SizedBox(width: 10),
+                          TextButton.icon(
+                            style: TextButton.styleFrom(
+                              side: BorderSide(
+                                color: isPressedThink
+                                    ? Colors.transparent
+                                    : const Color(0xFFE4E4E2),
+                                width: 0,
+                              ),
+                              backgroundColor: isPressedThink
+                                  ? const Color(0xFF141313)
+                                  : const Color(0xFFEFEFED),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 13,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(40),
+                              ),
                             ),
-                            backgroundColor: isPressedThink
-                                ? const Color(0xFF141313)
-                                : const Color(0xFFEFEFED),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 13,
-                              vertical: 10,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(40),
-                            ),
-                          ),
-                          icon: Icon(
-                            Icons.lightbulb_outlined,
-                            color: isPressedThink
-                                ? Colors.white
-                                : const Color(0xFF141313),
-                            size: 20,
-                          ),
-                          label: Text(
-                            'Think',
-                            style: GoogleFonts.ubuntu(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
+                            icon: Icon(
+                              Icons.lightbulb_outlined,
                               color: isPressedThink
                                   ? Colors.white
                                   : const Color(0xFF141313),
+                              size: 20,
                             ),
+                            label: Text(
+                              'Think',
+                              style: GoogleFonts.ubuntu(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: isPressedThink
+                                    ? Colors.white
+                                    : const Color(0xFF141313),
+                              ),
+                            ),
+                            onPressed: () {
+                              FocusScope.of(context).unfocus();
+                              setState(() {
+                                isPressedThink = !isPressedThink;
+                              });
+                            },
                           ),
-                          onPressed: () {
-                            setState(() {
-                              isPressedThink = !isPressedThink;
-                            });
-                          },
+                        ],
+                      ),
+                      IconButton(
+                        style: IconButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+                          fixedSize: _textController.text.isEmpty
+                              ? const Size(35, 35)
+                              : const Size(40, 40),
                         ),
-                      ],
-                    ),
-                    IconButton(
-                      style: IconButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 0, 0, 0),
-                        fixedSize: _textController.text.isEmpty
-                            ? const Size(35, 35)
-                            : const Size(40, 40),
+                        icon: Icon(
+                          _textController.text.isEmpty
+                              ? Icons.graphic_eq
+                              : Icons.send,
+                          size: _textController.text.isEmpty ? 22 : 25,
+                          color: const Color.fromARGB(255, 255, 255, 255),
+                        ),
+                        onPressed: _textController.text.isEmpty
+                            ? () {
+                                // Handle voice input or other action when text is empty
+                                print('Voice input pressed');
+                              }
+                            : _sendMessage,
                       ),
-                      icon: Icon(
-                        _textController.text.isEmpty
-                            ? Icons.graphic_eq
-                            : Icons.send,
-                        size: _textController.text.isEmpty ? 22 : 25,
-                        color: const Color.fromARGB(255, 255, 255, 255),
-                      ),
-                      onPressed: _textController.text.isEmpty
-                          ? () {
-                              // Handle voice input or other action when text is empty
-                              print('Voice input pressed');
-                            }
-                          : _sendMessage,
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
