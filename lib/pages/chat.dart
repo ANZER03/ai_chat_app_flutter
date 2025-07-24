@@ -76,7 +76,7 @@ class _ChatState extends State<Chat> {
   final FocusNode _focusNode = FocusNode();
   late String _apiKey;
   late ChatService chatService;
-  final List<Map<String, String>> _messages = [];
+  final List<Map<String, dynamic>> _messages = [];
   final List<File> _selectedImages = [];
   final ImagePicker _picker = ImagePicker();
 
@@ -118,8 +118,12 @@ class _ChatState extends State<Chat> {
     final List<Map<String, dynamic>> imageData = await _mapImagesToJson();
 
     setState(() {
-      // Add user message to the list
-      _messages.add({"role": "user", "message": userMessage});
+      // Add user message to the list with images
+      _messages.add({
+        "role": "user",
+        "message": userMessage,
+        "images": List<File>.from(_selectedImages),
+      });
 
       // Clear the text field
       _textController.clear();
@@ -298,7 +302,10 @@ class _ChatState extends State<Chat> {
                 itemBuilder: (context, index) {
                   final message = _messages[index];
                   if (message['role'] == 'user') {
-                    return UserMessage(message: message['message']!);
+                    return UserMessage(
+                      message: message['message']!,
+                      images: message['images'] as List<File>?,
+                    );
                   } else {
                     return AiMessage(message: message['message']!);
                   }

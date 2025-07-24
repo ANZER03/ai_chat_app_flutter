@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:io';
 
 class UserMessage extends StatefulWidget {
   final String message;
-  const UserMessage({Key? key, required this.message}) : super(key: key);
+  final List<File>? images;
+  const UserMessage({Key? key, required this.message, this.images})
+    : super(key: key);
 
   @override
   State<UserMessage> createState() => _UserMessageState();
@@ -74,6 +77,36 @@ class _UserMessageState extends State<UserMessage>
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          // Image grid above the message
+          if (widget.images != null && widget.images!.isNotEmpty)
+            Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.7,
+              ),
+              margin: const EdgeInsets.only(
+                left: 10,
+                right: 10,
+                top: 5,
+                bottom: 8,
+              ),
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: widget.images!.length == 1 ? 1 : 2,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 1,
+                ),
+                itemCount: widget.images!.length,
+                itemBuilder: (context, index) {
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.file(widget.images![index], fit: BoxFit.cover),
+                  );
+                },
+              ),
+            ),
           GestureDetector(
             onTap: _toggleCopyIcon,
             child: Container(
