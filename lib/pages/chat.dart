@@ -240,7 +240,7 @@ class _ChatState extends State<Chat> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      drawerEdgeDragWidth: 40,
+      drawerEdgeDragWidth: 100,
       backgroundColor: const Color(0xFFF8F6F5),
       drawer: DrawerWidget(),
       appBar: AppBar(
