@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ai_chat_app/pages/login.dart';
 import 'package:ai_chat_app/pages/chat.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -9,10 +10,31 @@ Future<void> main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  String _initialRoute = '/login';
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+
+    setState(() {
+      _initialRoute = isLoggedIn ? '/chat' : '/login';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -21,9 +43,9 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      initialRoute: '/login',
+      initialRoute: _initialRoute,
       routes: {
-        '/login': (context) => LoginPage(),
+        '/login': (context) => const LoginPage(),
         '/chat': (context) => Chat(),
       },
       debugShowCheckedModeBanner: false,

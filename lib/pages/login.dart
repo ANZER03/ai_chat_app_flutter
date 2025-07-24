@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
-  LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -12,12 +13,54 @@ class _LoginPageState extends State<LoginPage> {
   // Controllers for the text fields
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+  String _errorMessage = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  // Check if user is already logged in
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+
+    if (isLoggedIn) {
+      // User is already logged in, navigate to chat
+      Navigator.pushReplacementNamed(context, '/chat');
+    }
+  }
 
   // Function to handle login
-  void _handleLogin() {
-    // TODO: Implement login functionality
-    print('Username: ${_usernameController.text}');
-    print('Password: ${_passwordController.text}');
+  Future<void> _handleLogin() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+
+    // Check credentials
+    if (username == 'admin' && password == 'admin123') {
+      // Store login status
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', true);
+      await prefs.setString('username', username);
+
+      // Navigate to chat page
+      Navigator.pushReplacementNamed(context, '/chat');
+    } else {
+      setState(() {
+        _errorMessage = 'Invalid username or password';
+      });
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   // Function to handle skip login
@@ -229,7 +272,37 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 24.0),
+                SizedBox(height: 16.0),
+                // Error message
+                if (_errorMessage.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.red.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.error_outline, color: Colors.red, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _errorMessage,
+                            style: GoogleFonts.ubuntu(
+                              fontSize: 14,
+                              color: Colors.red,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                SizedBox(height: 8.0),
                 Container(
                   decoration: BoxDecoration(
                     boxShadow: [
@@ -241,7 +314,7 @@ class _LoginPageState extends State<LoginPage> {
                     ],
                   ),
                   child: ElevatedButton(
-                    onPressed: _handleLogin,
+                    onPressed: _isLoading ? null : _handleLogin,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF141313),
                       foregroundColor: Colors.white,
@@ -252,14 +325,39 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(30.0),
                       ),
                     ),
-                    child: Text(
-                      'Log In',
-                      style: GoogleFonts.ubuntu(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
+                    child: _isLoading
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Logging in...',
+                                style: GoogleFonts.ubuntu(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Text(
+                            'Log In',
+                            style: GoogleFonts.ubuntu(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
                   ),
                 ),
 

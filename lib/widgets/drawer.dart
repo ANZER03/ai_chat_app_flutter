@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DrawerWidget extends StatefulWidget {
   const DrawerWidget({super.key});
@@ -49,6 +50,76 @@ class _DrawerWidgetState extends State<DrawerWidget> {
           )
           .toList();
     });
+  }
+
+  Future<void> _handleLogout() async {
+    // Show confirmation dialog
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFF8F6F5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Logout',
+            style: GoogleFonts.ubuntu(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF141313),
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to logout?',
+            style: GoogleFonts.ubuntu(
+              fontSize: 16,
+              color: const Color(0xFF7d7c73),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.ubuntu(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF7d7c73),
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF141313),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Logout',
+                style: GoogleFonts.ubuntu(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldLogout == true) {
+      // Clear stored credentials
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('isLoggedIn');
+      await prefs.remove('username');
+
+      // Navigate to login page
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    }
   }
 
   void _showMessageOptions(BuildContext context, int index) {
@@ -340,7 +411,11 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                       ],
                     ),
                   ),
-                  IconButton(onPressed: () => {}, icon: Icon(Icons.settings)),
+                  IconButton(
+                    onPressed: _handleLogout,
+                    icon: Icon(Icons.logout, color: const Color(0xFF7d7c73)),
+                    tooltip: 'Logout',
+                  ),
                 ],
               ),
             ),
