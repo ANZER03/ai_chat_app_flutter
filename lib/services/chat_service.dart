@@ -4,16 +4,24 @@ import 'package:http/http.dart' as http;
 class ChatMessage {
   final String role;
   final String content;
+  final List<Map<String, dynamic>>? images;
 
-  ChatMessage({required this.role, required this.content});
+  ChatMessage({required this.role, required this.content, this.images});
 
   Map<String, dynamic> toJson() {
-    return {
-      'role': role,
-      'parts': [
-        {'text': content},
-      ],
-    };
+    List<Map<String, dynamic>> parts = [];
+
+    // Add text content if not empty
+    if (content.isNotEmpty) {
+      parts.add({'text': content});
+    }
+
+    // Add images if provided
+    if (images != null && images!.isNotEmpty) {
+      parts.addAll(images!);
+    }
+
+    return {'role': role, 'parts': parts};
   }
 }
 
@@ -80,10 +88,24 @@ class ChatService {
   /// Method to continue a conversation with history
   Future<String> continueConversation(
     List<ChatMessage> conversationHistory,
-    String newMessage,
-  ) async {
+    String newMessage, {
+    List<Map<String, dynamic>>? images,
+  }) async {
     final messages = [...conversationHistory];
-    messages.add(ChatMessage(role: 'user', content: newMessage));
+    messages.add(
+      ChatMessage(role: 'user', content: newMessage, images: images),
+    );
+    return sendMessage(messages);
+  }
+
+  /// Method to send a message with images
+  Future<String> sendMessageWithImages(
+    String message,
+    List<Map<String, dynamic>> images,
+  ) async {
+    final messages = [
+      ChatMessage(role: 'user', content: message, images: images),
+    ];
     return sendMessage(messages);
   }
 }

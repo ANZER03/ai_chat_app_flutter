@@ -8,6 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
+import 'package:path/path.dart' as path;
 
 class Chat extends StatefulWidget {
   Chat({Key? key}) : super(key: key);
@@ -101,7 +102,9 @@ class _ChatState extends State<Chat> {
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
-        0, // With reverse: true, 0 is the bottom of the list
+        _scrollController
+            .position
+            .maxScrollExtent, // Scroll to the top of the list
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
@@ -112,6 +115,7 @@ class _ChatState extends State<Chat> {
     if (_textController.text.trim().isEmpty) return;
 
     final userMessage = _textController.text.trim();
+    final List<Map<String, dynamic>> imageData = await _mapImagesToJson();
 
     setState(() {
       // Add user message to the list
@@ -128,11 +132,13 @@ class _ChatState extends State<Chat> {
     });
 
     // Get AI response
-    await _AIResponse(userMessage);
+    await _AIResponse(userMessage, imageData);
   }
 
-  Future<void> _AIResponse(String userMessage) async {
-    // final initialMessage = ChatMessage(role: 'user', content: userMessage);
+  Future<void> _AIResponse(
+    String userMessage,
+    List<Map<String, dynamic>> images,
+  ) async {
     final List<ChatMessage> messages = _messages
         .map(
           (value) => ChatMessage(
@@ -141,10 +147,13 @@ class _ChatState extends State<Chat> {
           ),
         )
         .toList();
+
     final Response = await chatService.continueConversation(
       messages,
       userMessage,
+      images: images.isNotEmpty ? images : null,
     );
+
     setState(() {
       _messages.add({"role": "model", "message": Response});
     });
@@ -167,6 +176,32 @@ class _ChatState extends State<Chat> {
         _selectedImages.add(imageFile);
       });
     }
+  }
+
+  Future<List<Map<String, dynamic>>> _mapImagesToJson() async {
+    List<Map<String, dynamic>> jsonList = [];
+    for (File imageFile in _selectedImages) {
+      // Convert image to Base64
+      final bytes = await imageFile.readAsBytes();
+      final String base64Image = base64Encode(bytes);
+
+      // Determine MIME type based on file extension
+      String mimeType = 'image/jpeg'; // Default to JPEG
+      String extension = path.extension(imageFile.path).toLowerCase();
+      if (extension == '.png') {
+        mimeType = 'image/png';
+      } else if (extension == '.jpg' || extension == '.jpeg') {
+        mimeType = 'image/jpeg';
+      }
+
+      // Create JSON structure for the image
+      final Map<String, dynamic> imageJson = {
+        'inlineData': {'mimeType': mimeType, 'data': base64Image},
+      };
+      jsonList.add(imageJson);
+    }
+
+    return jsonList;
   }
 
   void _removeImage(int index) {
