@@ -241,11 +241,11 @@ class _ChatState extends State<Chat> {
           // Fixed Bottom Container
           Container(
             decoration: BoxDecoration(
-              color: Colors.transparent,
+              color: const Color.fromARGB(255, 255, 255, 255),
               border: Border.all(color: const Color(0xFFE4E4E2), width: 1.2),
               borderRadius: BorderRadius.circular(30),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 7),
             margin: const EdgeInsets.fromLTRB(10, 1, 10, 5),
             child: Column(
               mainAxisSize: MainAxisSize.min,
