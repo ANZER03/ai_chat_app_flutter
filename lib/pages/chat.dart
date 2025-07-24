@@ -5,6 +5,9 @@ import 'package:ai_chat_app/widgets/user_message.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
 
 class Chat extends StatefulWidget {
   Chat({Key? key}) : super(key: key);
@@ -73,6 +76,8 @@ class _ChatState extends State<Chat> {
   late String _apiKey;
   late ChatService chatService;
   final List<Map<String, String>> _messages = [];
+  final List<File> _selectedImages = [];
+  final ImagePicker _picker = ImagePicker();
 
   bool isPressedThink = false;
   bool isPressedDeepSearch = false;
@@ -114,6 +119,7 @@ class _ChatState extends State<Chat> {
 
       // Clear the text field
       _textController.clear();
+      _selectedImages.clear();
     });
 
     // Scroll to bottom after adding message
@@ -126,10 +132,21 @@ class _ChatState extends State<Chat> {
   }
 
   Future<void> _AIResponse(String userMessage) async {
-    final initialMessage = ChatMessage(role: 'user', content: userMessage);
-    final firstResponse = await chatService.sendMessage([initialMessage]);
+    // final initialMessage = ChatMessage(role: 'user', content: userMessage);
+    final List<ChatMessage> messages = _messages
+        .map(
+          (value) => ChatMessage(
+            role: value['role'] ?? '',
+            content: value['message'] ?? '',
+          ),
+        )
+        .toList();
+    final Response = await chatService.continueConversation(
+      messages,
+      userMessage,
+    );
     setState(() {
-      _messages.add({"role": "ai", "message": firstResponse});
+      _messages.add({"role": "model", "message": Response});
     });
     // No scrolling after AI response
   }
@@ -142,11 +159,27 @@ class _ChatState extends State<Chat> {
     super.dispose();
   }
 
+  Future<void> _pickImage(ImageSource source) async {
+    final XFile? pickedFile = await _picker.pickImage(source: source);
+    if (pickedFile != null) {
+      final File imageFile = File(pickedFile.path);
+      setState(() {
+        _selectedImages.add(imageFile);
+      });
+    }
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      _selectedImages.removeAt(index);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
+      drawerEdgeDragWidth: 40,
       backgroundColor: const Color(0xFFF8F6F5),
       drawer: DrawerWidget(),
       appBar: AppBar(
@@ -246,10 +279,63 @@ class _ChatState extends State<Chat> {
               borderRadius: BorderRadius.circular(30),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 7),
-            margin: const EdgeInsets.fromLTRB(10, 1, 10, 5),
+            margin: const EdgeInsets.fromLTRB(4, 1, 4, 3),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Image preview list
+                if (_selectedImages.isNotEmpty)
+                  Container(
+                    height: 120,
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _selectedImages.length,
+                      itemBuilder: (context, index) {
+                        return Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          child: Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(25),
+                                child: Image.file(
+                                  _selectedImages[index],
+                                  width: 120,
+                                  height: 120,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: GestureDetector(
+                                  onTap: () => _removeImage(index),
+                                  child: Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      color: const Color.fromARGB(
+                                        255,
+                                        224,
+                                        224,
+                                        224,
+                                      ).withOpacity(0.9),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      color: Colors.black,
+                                      size: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
@@ -319,6 +405,7 @@ class _ChatState extends State<Chat> {
                             itemBuilder: (BuildContext context) => [
                               PopupMenuItem(
                                 value: 'camera',
+                                onTap: () => {_pickImage(ImageSource.camera)},
                                 child: Padding(
                                   padding: const EdgeInsets.only(bottom: 23.0),
                                   child: Row(
@@ -361,6 +448,7 @@ class _ChatState extends State<Chat> {
                               ),
                               PopupMenuItem(
                                 value: 'photos',
+                                onTap: () => {_pickImage(ImageSource.gallery)},
                                 child: Padding(
                                   padding: const EdgeInsets.only(bottom: 23.0),
                                   child: Row(
