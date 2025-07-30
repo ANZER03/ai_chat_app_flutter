@@ -189,5 +189,3 @@ The app integrates with Google's Gemini API for AI responses. The `ChatService` 
 ### Conversation Management
 
 <img src="screenshots/placeholder_conv_options.jpg" alt="Options" width="400">
-
-`
