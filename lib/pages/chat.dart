@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:path/path.dart' as path;
@@ -50,7 +51,7 @@ class _ChatState extends State<Chat> {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 400),
         curve: Curves.easeOut,
       );
     }
@@ -68,6 +69,12 @@ class _ChatState extends State<Chat> {
         "message": userMessage,
         "images": List<File>.from(_selectedImages),
       });
+      _messages.add({
+        "role": "model",
+        "message": "",
+        "isLoading": true, // Add loading flag
+      });
+      isAIResponding = true;
       _textController.clear();
       _selectedImages.clear();
     });
@@ -84,6 +91,7 @@ class _ChatState extends State<Chat> {
     List<Map<String, dynamic>> images,
   ) async {
     final List<ChatMessage> messages = _messages
+        .where((m) => m['role'] != 'model' || !(m['isLoading'] ?? false))
         .map(
           (value) => ChatMessage(
             role: value['role'] ?? '',
@@ -92,17 +100,27 @@ class _ChatState extends State<Chat> {
         )
         .toList();
 
-    final response = await chatService.continueConversation(
-      messages,
-      userMessage,
-      images: images.isNotEmpty ? images : null,
-    );
+    final stream = images.isNotEmpty
+        ? chatService.sendMessageWithImagesStream(userMessage, images)
+        : chatService.continueConversationStream(
+            messages,
+            userMessage,
+            images: images,
+          );
+
+    await for (final response in stream) {
+      setState(() {
+        _messages.last['message'] = response;
+        _messages.last['isLoading'] =
+            false; // Clear loading flag once response starts
+      });
+      // WidgetsBinding.instance.addPostFrameCallback((_) {
+      //   // _scrollToBottom();
+      // });
+    }
 
     setState(() {
-      _messages.add({"role": "model", "message": response});
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToBottom();
-      });
+      isAIResponding = false;
     });
   }
 
@@ -280,6 +298,19 @@ class _ChatState extends State<Chat> {
                             return UserMessage(
                               message: message['message']!,
                               images: message['images'] as List<File>?,
+                            );
+                          } else if (message['isLoading'] == true) {
+                            return Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  LoadingAnimationWidget.horizontalRotatingDots(
+                                    color: Colors.grey,
+                                    size: 30,
+                                  ),
+                                ],
+                              ),
                             );
                           } else {
                             return AiMessage(message: message['message']!);

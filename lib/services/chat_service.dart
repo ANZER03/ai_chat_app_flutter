@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -11,12 +12,10 @@ class ChatMessage {
   Map<String, dynamic> toJson() {
     List<Map<String, dynamic>> parts = [];
 
-    // Add text content if not empty
     if (content.isNotEmpty) {
       parts.add({'text': content});
     }
 
-    // Add images if provided
     if (images != null && images!.isNotEmpty) {
       parts.addAll(images!);
     }
@@ -26,121 +25,121 @@ class ChatMessage {
 }
 
 class ChatService {
-  static const String _baseUrl =
-      'https://generativelanguage.googleapis.com/v1beta';
+  static const String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
   static const String _defaultModel = 'gemini-2.5-flash';
 
   final String _apiKey;
   final String _model;
 
   ChatService({required String apiKey, String? model})
-    : _apiKey = apiKey,
-      _model = model ?? _defaultModel {}
+      : _apiKey = apiKey,
+        _model = model ?? _defaultModel;
 
-  /// Sends a message to the Gemini API and returns the response
-  Future<String> sendMessage(List<ChatMessage> messages) async {
+  /// Streams messages from the Gemini API and updates the last AI message
+  Stream<String> streamMessage(List<ChatMessage> messages) async* {
     if (_apiKey.isEmpty) {
       throw Exception('API key is not configured');
     }
 
-    final url = '$_baseUrl/models/$_model:generateContent';
+    final url = '$_baseUrl/models/$_model:streamGenerateContent?alt=sse';
 
-    // Prepare the request body
-    final Map<String, dynamic> requestBody = {
+    final requestBody = {
       'contents': messages.map((message) => message.toJson()).toList(),
     };
 
     try {
-      // Send the POST request
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {
-          'x-goog-api-key': _apiKey,
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(requestBody),
-      );
+      final client = http.Client();
+      final request = http.Request('POST', Uri.parse(url))
+        ..headers['x-goog-api-key'] = _apiKey
+        ..headers['Content-Type'] = 'application/json'
+        ..body = jsonEncode(requestBody);
 
-      // Check the response status
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        // Extract the generated content
-        final generatedText =
-            data['candidates']?[0]['content']['parts'][0]['text'] ??
-            'No response from AI';
-        return generatedText;
-      } else {
+      final response = await client.send(request);
+
+      if (response.statusCode != 200) {
         throw Exception(
-          'Failed to generate content: ${response.statusCode} ${response.reasonPhrase}',
-        );
+            'Failed to stream content: ${response.statusCode} ${response.reasonPhrase}');
       }
+
+      String accumulatedResponse = '';
+
+      await for (final chunk in response.stream.transform(utf8.decoder)) {
+        // Process SSE events
+        final lines = chunk.split('\n');
+        for (final line in lines) {
+          if (line.startsWith('data: ')) {
+            final data = line.substring(6); // Remove 'data: ' prefix
+            if (data.isNotEmpty) {
+              try {
+                final jsonData = jsonDecode(data);
+                final text = jsonData['candidates']?[0]['content']['parts'][0]['text'] ?? '';
+                if (text.isNotEmpty) {
+                  accumulatedResponse += text;
+                  yield accumulatedResponse; // Yield the accumulated response
+                }
+              } catch (e) {
+                // Skip malformed JSON lines
+                continue;
+              }
+            }
+          }
+        }
+      }
+
+      client.close();
     } catch (e) {
-      throw Exception('Error communicating with Gemini API: $e');
+      throw Exception('Error streaming from Gemini API: $e');
     }
   }
 
-  /// Simple method to get a response to a single message
-  Future<String> getSimpleResponse(String message) async {
+  /// Streams a response to a single message
+  Stream<String> getSimpleStreamResponse(String message) {
     final messages = [ChatMessage(role: 'user', content: message)];
-    return sendMessage(messages);
+    return streamMessage(messages);
   }
 
-  /// Method to continue a conversation with history
-  Future<String> continueConversation(
+  /// Streams a response continuing a conversation with history
+  Stream<String> continueConversationStream(
     List<ChatMessage> conversationHistory,
     String newMessage, {
     List<Map<String, dynamic>>? images,
-  }) async {
+  }) {
     final messages = [...conversationHistory];
-    messages.add(
-      ChatMessage(role: 'user', content: newMessage, images: images),
-    );
-    return sendMessage(messages);
+    messages.add(ChatMessage(role: 'user', content: newMessage, images: images));
+    return streamMessage(messages);
   }
 
-  /// Method to send a message with images
-  Future<String> sendMessageWithImages(
+  /// Streams a response for a message with images
+  Stream<String> sendMessageWithImagesStream(
     String message,
     List<Map<String, dynamic>> images,
-  ) async {
-    final messages = [
-      ChatMessage(role: 'user', content: message, images: images),
-    ];
-    return sendMessage(messages);
+  ) {
+    final messages = [ChatMessage(role: 'user', content: message, images: images)];
+    return streamMessage(messages);
   }
 }
 
 void main() async {
-  // Create a chat service instance with API key
   final chatService = ChatService(apiKey: '');
 
   try {
-    // Test with a conversation
-    print('Starting conversation with Gemini...');
+    print('Starting streaming conversation with Gemini...');
 
-    // Initial message
-    final initialMessage = ChatMessage(
-      role: 'user',
-      content: 'Hello, can you introduce yourself?',
-    );
-    final firstResponse = await chatService.sendMessage([initialMessage]);
-    print('First response from Gemini:');
-    print(firstResponse);
+    // Initial streaming message
+    final message = 'Explain how AI works';
+    print('Sending message: $message');
+    
+    final stream = chatService.getSimpleStreamResponse(message);
+    String lastMessage = '';
 
-    // Continue the conversation
-    final conversationHistory = [
-      initialMessage,
-      ChatMessage(role: 'model', content: firstResponse),
-    ];
+    await for (final response in stream) {
+      // Clear previous line and update with new response
+      print('\r${' ' * lastMessage.length}\r$response');
+      lastMessage = response;
+    }
 
-    final followUpResponse = await chatService.continueConversation(
-      conversationHistory,
-      'What can you help me with?',
-    );
-
-    print('Follow-up response from Gemini:');
-    print(followUpResponse);
+    print('\nStreaming completed.');
   } catch (e) {
-    print('Error testing chat service: $e');
+    print('Error testing streaming chat service: $e');
   }
 }
