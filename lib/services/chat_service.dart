@@ -25,15 +25,16 @@ class ChatMessage {
 }
 
 class ChatService {
-  static const String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
-  static const String _defaultModel = 'gemini-2.5-flash';
+  static const String _baseUrl =
+      'https://generativelanguage.googleapis.com/v1beta';
+  static const String _defaultModel = 'gemini-2.0-flash';
 
   final String _apiKey;
   final String _model;
 
   ChatService({required String apiKey, String? model})
-      : _apiKey = apiKey,
-        _model = model ?? _defaultModel;
+    : _apiKey = apiKey,
+      _model = model ?? _defaultModel;
 
   /// Streams messages from the Gemini API and updates the last AI message
   Stream<String> streamMessage(List<ChatMessage> messages) async* {
@@ -58,7 +59,8 @@ class ChatService {
 
       if (response.statusCode != 200) {
         throw Exception(
-            'Failed to stream content: ${response.statusCode} ${response.reasonPhrase}');
+          'Failed to stream content: ${response.statusCode} ${response.reasonPhrase}',
+        );
       }
 
       String accumulatedResponse = '';
@@ -72,7 +74,9 @@ class ChatService {
             if (data.isNotEmpty) {
               try {
                 final jsonData = jsonDecode(data);
-                final text = jsonData['candidates']?[0]['content']['parts'][0]['text'] ?? '';
+                final text =
+                    jsonData['candidates']?[0]['content']['parts'][0]['text'] ??
+                    '';
                 if (text.isNotEmpty) {
                   accumulatedResponse += text;
                   yield accumulatedResponse; // Yield the accumulated response
@@ -105,7 +109,9 @@ class ChatService {
     List<Map<String, dynamic>>? images,
   }) {
     final messages = [...conversationHistory];
-    messages.add(ChatMessage(role: 'user', content: newMessage, images: images));
+    messages.add(
+      ChatMessage(role: 'user', content: newMessage, images: images),
+    );
     return streamMessage(messages);
   }
 
@@ -114,7 +120,9 @@ class ChatService {
     String message,
     List<Map<String, dynamic>> images,
   ) {
-    final messages = [ChatMessage(role: 'user', content: message, images: images)];
+    final messages = [
+      ChatMessage(role: 'user', content: message, images: images),
+    ];
     return streamMessage(messages);
   }
 }
@@ -128,7 +136,7 @@ void main() async {
     // Initial streaming message
     final message = 'Explain how AI works';
     print('Sending message: $message');
-    
+
     final stream = chatService.getSimpleStreamResponse(message);
     String lastMessage = '';
 
